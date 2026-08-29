@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Data Quest — ภารกิจพิชิตโครงสร้างข้อมูล</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;600;700&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-void:#0a0d18;
+  --bg-panel:#131a2e;
+  --bg-panel-2:#1a2340;
+  --bg-raised:#212b4d;
+  --ink:#e9ecf9;
+  --ink-dim:#8b93b8;
+  --ink-faint:#565f85;
+  --border:rgba(255,255,255,0.08);
+  --gold:#ffd166;
+  --danger:#f76b6b;
+  --success:#6ee7b7;
+  --c-string:#4fd1c5;
+  --c-list:#f6ad55;
+  --c-tuple:#b794f4;
+  --c-set:#68d391;
+  --c-dict:#f687b3;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Sarabun','Space Grotesk',sans-serif;
+  --font-pixel:'Press Start 2P',cursive;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(79,209,197,0.08), transparent 40%),
+    radial-gradient(circle at 85% 20%, rgba(246,173,85,0.07), transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(183,148,244,0.07), transparent 45%),
+    var(--bg-void);
+  color:var(--ink);
+  font-family:var(--font-body);
+  line-height:1.6;
+  padding-bottom:60px;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px;}
+
+/* ---------- HUD ---------- */
+.hud{
+  position:sticky; top:0; z-index:50;
+  background:rgba(10,13,24,0.9);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:12px 20px;
+}
+.hud-inner{
+  max-width:1000px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.hud-logo{
+  font-family:var(--font-display);font-weight:700;font-size:1.05rem;
+  display:flex;align-items:center;gap:8px;letter-spacing:0.02em;
+}
+.hud-logo .spark{color:var(--gold);}
+.hud-stats{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.hud-stat{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:0.82rem;color:var(--ink-dim);}
+.hud-stat b{color:var(--ink);font-weight:600;}
+.hud-bar{width:110px;height:8px;border-radius:5px;background:var(--bg-raised);overflow:hidden;border:1px solid var(--border);}
+.hud-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--c-string),var(--gold));transition:width .5s ease;}
+.hud-rank{font-family:var(--font-mono);font-size:0.75rem;padding:4px 10px;border-radius:20px;background:var(--bg-raised);border:1px solid var(--border);color:var(--gold);white-space:nowrap;}
+
+/* ---------- HERO ---------- */
+.hero{padding:56px 20px 30px;text-align:center;}
+.hero-eyebrow{
+  font-family:var(--font-pixel);font-size:0.6rem;color:var(--c-tuple);
+  letter-spacing:0.15em;margin-bottom:18px;display:block;
+}
+.hero h1{
+  font-family:var(--font-display);font-weight:700;font-size:clamp(1.9rem,5vw,3.1rem);
+  margin:0 0 14px;line-height:1.15;
+  background:linear-gradient(90deg,var(--c-string),var(--c-list),var(--c-tuple),var(--c-set),var(--c-dict));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{max-width:620px;margin:0 auto;color:var(--ink-dim);font-size:1.02rem;}
+.howto{
+  max-width:680px;margin:26px auto 0;text-align:left;
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;padding:18px 22px;
+}
+.howto h3{margin:0 0 10px;font-family:var(--font-display);font-size:0.95rem;color:var(--gold);}
+.howto ol{margin:0;padding-left:20px;color:var(--ink-dim);font-size:0.92rem;}
+.howto li{margin-bottom:4px;}
+
+/* ---------- QUEST MAP ---------- */
+.quest-map-section{padding:20px 20px 40px;}
+.quest-map-title{
+  text-align:center;font-family:var(--font-mono);font-size:0.78rem;
+  color:var(--ink-faint);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:26px;
+}
+.quest-map{
+  position:relative; display:flex; justify-content:space-between; align-items:flex-start;
+  max-width:820px;margin:0 auto;gap:6px;
+}
+.quest-map::before{
+  content:'';position:absolute;top:34px;left:8%;right:8%;height:2px;z-index:0;
+  background:repeating-linear-gradient(90deg,var(--ink-faint) 0 8px,transparent 8px 16px);
+  opacity:0.5;
+}
+.node{
+  position:relative;z-index:1;background:none;border:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-family:var(--font-body);color:var(--ink-dim);width:19%;
+  padding:0;
+}
+.node-circle{
+  width:68px;height:68px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  background:var(--bg-panel);border:2px solid var(--border);
+  transition:all .25s ease;position:relative;
+}
+.node-status{
+  position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+  background:var(--bg-void);border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:0.7rem;
+}
+.node.locked .node-circle{opacity:0.4;filter:grayscale(1);}
+.node.locked{cursor:not-allowed;}
+.node.unlocked .node-circle{border-color:var(--c);box-shadow:0 0 0 4px color-mix(in srgb, var(--c) 18%, transparent), 0 0 20px color-mix(in srgb, var(--c) 35%, transparent);}
+.node.unlocked .node-status{border-color:var(--c);color:var(--c);}
+.node.completed .node-circle{background:color-mix(in srgb, var(--c) 22%, var(--bg-panel));border-color:var(--c);}
+.node.completed .node-status{background:var(--c);color:var(--bg-void);border-color:var(--c);}
+.node-label{font-size:0.78rem;font-weight:600;color:var(--ink);}
+.node-label small{display:block;font-weight:400;color:var(--ink-faint);font-size:0.68rem;}
+.node.shake{animation:shake .4s;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+@media (max-width:640px){
+  .quest-map{flex-direction:column;align-items:stretch;gap:14px;}
+  .quest-map::before{top:8%;bottom:8%;left:33px;right:auto;width:2px;height:auto;
+    background:repeating-linear-gradient(180deg,var(--ink-faint) 0 8px,transparent 8px 16px);}
+  .node{flex-direction:row;width:100%;justify-content:flex-start;gap:14px;}
+  .node-circle{width:56px;height:56px;font-size:1.3rem;flex-shrink:0;}
+  .node-label{text-align:left;}
+}
+
+/* ---------- LEVEL SECTIONS ---------- */
+.level{
+  max-width:1000px;margin:0 auto 70px;padding:0 20px;
+  scroll-margin-top:90px;
+}
+.level-inner{
+  border:1px solid var(--border);border-radius:20px;overflow:hidden;
+  background:var(--bg-panel);
+}
+.level-banner{
+  padding:30px 28px 24px;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--c) 16%, var(--bg-panel-2)), var(--bg-panel-2));
+  border-bottom:1px solid var(--border);
+}
+.level-tag{
+  font-family:var(--font-pixel);font-size:0.6rem;color:var(--c);letter-spacing:0.1em;
+}
+.level-banner h2{
+  font-family:var(--font-display);font-size:clamp(1.4rem,3vw,2rem);margin:10px 0 8px;
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+}
+.level-banner h2 .th{font-size:1rem;color:var(--ink-dim);font-weight:500;}
+.flavor{margin:0;color:var(--ink-dim);font-size:0.96rem;max-width:640px;}
+
+.level-body{padding:26px 28px 32px;display:grid;gap:22px;}
+.card{
+  background:var(--bg-panel-2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;
+}
+.card h3{
+  margin:0 0 14px;font-family:var(--font-display);font-size:0.98rem;
+  display:flex;align-items:center;gap:8px;color:var(--ink);
+}
+.concept-card ul{margin:0;padding-left:20px;color:var(--ink-dim);font-size:0.93rem;}
+.concept-card li{margin-bottom:7px;}
+.concept-card li b{color:var(--ink);font-weight:600;}
+.concept-card code{
+  background:var(--bg-raised);padding:1px 6px;border-radius:5px;font-family:var(--font-mono);
+  font-size:0.85em;color:var(--c);
+}
+
+/* code block */
+.code-block{
+  background:#0c1120;border:1px solid var(--border);border-radius:10px;
+  padding:16px 18px;font-family:var(--font-mono);font-size:0.86rem;overflow-x:auto;
+  margin:0;color:#c7cee6;
+}
+.code-block .kw{color:#7dd3fc;}
+.code-block .fn{color:#93c5fd;}
+.code-block .str{color:#a7f3d0;}
+.code-block .num{color:#fca5a5;}
+.code-block .com{color:#5c6690;font-style:italic;}
+.code-block .out{color:var(--ink-faint);}
+
+/* diagrams generic */
+.diagram{display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0 4px;}
+.box-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.idx-cell{width:44px;text-align:center;font-family:var(--font-mono);font-size:0.72rem;color:var(--ink-faint);}
+.char-box{
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-weight:600;font-size:1.05rem;
+  background:var(--bg-raised);border:1.5px solid var(--c);border-radius:8px;color:var(--ink);
+}
+.diagram-caption{font-size:0.8rem;color:var(--ink-faint);font-family:var(--font-mono);}
+
+/* list diagram */
+.list-diagram{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;}
+.list-state{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.list-state .tag{font-size:0.72rem;color:var(--ink-faint);font-family:var(--font-mono);}
+.list-arrow{font-family:var(--font-mono);color:var(--c);font-size:0.85rem;text-align:center;}
+.box-word{
+  min-width:64px;height:44px;padding:0 10px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:0.88rem;background:var(--bg-raised);
+  border:1.5px solid var(--border);border-radius:8px;
+}
+.box-word.hl{border-color:var(--c);color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 20%, transparent);}
+
+/* tuple diagram */
+.tuple-boxes{display:flex;gap:6px;justify-content:center;}
+.lock-box{
+  position:relative;width:56px;height:52px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-weight:600;background:var(--bg-raised);border:1.5px solid var(--c);border-radius:8px;
+}
+.lock-box .pin{position:absolute;top:-9px;right:-6px;font-size:0.85rem;}
+.error-tag{
+  margin-top:6px;font-family:var(--font-mono);font-size:0.78rem;color:var(--danger);
+  background:rgba(247,107,107,0.1);border:1px solid rgba(247,107,107,0.3);
+  border-radius:8px;padding:8px 12px;text-align:center;max-width:480px;
+}
+
+/* set diagram */
+.bubbles{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:6px 0;}
+.bubble{
+  padding:10px 18px;border-radius:40px;font-family:var(--font-mono);font-size:0.88rem;
+  background:var(--bg-raised);border:1.5px solid var(--c);
+}
+.bubble:nth-child(1){transform:rotate(-3deg);}
+.bubble:nth-child(2){transform:rotate(2deg) translateY(4px);}
+.bubble:nth-child(3){transform:rotate(-1deg) translateY(-3px);}
+.dup-demo{display:flex;flex-direction:column;gap:8px;width:100%;max-width:440px;margin-top:6px;}
+.dup-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:var(--font-mono);font-size:0.82rem;
+  background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex-wrap:wrap;}
+.badge{font-family:var(--font-body);font-size:0.78rem;padding:2px 10px;border-radius:20px;white-space:nowrap;}
+.badge.reject{background:rgba(247,107,107,0.12);color:var(--danger);}
+.badge.accept{background:rgba(110,231,183,0.12);color:var(--success);}
+
+/* dict diagram */
+.kv-list{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;}
+.kv{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--font-mono);font-size:0.9rem;}
+.kv .key{background:var(--bg-raised);border:1.5px solid var(--c);border-radius:8px;padding:8px 14px;min-width:100px;text-align:center;}
+.kv .val{background:var(--bg-raised);border:1.5px solid var(--border);border-radius:8px;padding:8px 14px;min-width:100px;text-align:center;}
+.kv .ar{color:var(--c);}
+.kv.new .val{border-color:var(--c);color:var(--c);}
+
+/* quiz */
+.quiz .question{margin-bottom:20px;}
+.quiz .question:last-child{margin-bottom:0;}
+.quiz p.qtext{margin:0 0 12px;font-size:0.94rem;}
+.options{display:grid;gap:8px;}
+.opt{
+  text-align:left;font-family:var(--font-mono);font-size:0.85rem;
+  background:var(--bg-raised);border:1.5px solid var(--border);border-radius:10px;
+  padding:11px 14px;color:var(--ink);cursor:pointer;transition:all .15s ease;
+}
+.opt:hover{border-color:var(--c);}
+.opt.correct{border-color:var(--success);background:rgba(110,231,183,0.1);color:var(--success);}
+.opt.wrong{border-color:var(--danger);background:rgba(247,107,107,0.1);color:var(--danger);animation:shake .35s;}
+.opt:disabled{cursor:default;}
+.feedback{min-height:18px;font-size:0.82rem;margin:8px 0 0;font-family:var(--font-body);}
+.feedback.ok{color:var(--success);}
+.feedback.bad{color:var(--danger);}
+.xp-pop{color:var(--gold);font-family:var(--font-mono);font-size:0.78rem;margin-left:8px;}
+
+.btn-next{
+  margin-top:22px;width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--border);
+  background:var(--bg-raised);color:var(--ink-faint);font-family:var(--font-display);font-weight:600;
+  font-size:0.92rem;cursor:not-allowed;transition:all .2s ease;
+}
+.btn-next.ready{
+  border-color:var(--c);color:var(--c);cursor:pointer;
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 15%, transparent);
+}
+.btn-next.ready:hover{background:color-mix(in srgb, var(--c) 14%, var(--bg-raised));}
+
+/* finale */
+.finale{max-width:900px;margin:20px auto 0;padding:0 20px;display:none;}
+.finale.show{display:block;animation:fadeUp .6s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.finale-inner{
+  border:1px solid var(--border);border-radius:20px;padding:36px 30px;text-align:center;
+  background:linear-gradient(160deg, rgba(255,209,102,0.08), var(--bg-panel));
+}
+.finale h2{font-family:var(--font-display);font-size:1.8rem;margin:8px 0;
+  background:linear-gradient(90deg,var(--gold),var(--c-set));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.finale p{color:var(--ink-dim);max-width:520px;margin:0 auto 24px;}
+.compare-wrap{overflow-x:auto;margin-top:10px;}
+table.compare{width:100%;border-collapse:collapse;font-size:0.85rem;min-width:620px;}
+table.compare th,table.compare td{padding:11px 12px;border-bottom:1px solid var(--border);text-align:center;}
+table.compare th{font-family:var(--font-display);color:var(--ink-dim);font-weight:600;font-size:0.8rem;}
+table.compare td:first-child,table.compare th:first-child{text-align:left;font-family:var(--font-mono);}
+
+footer{text-align:center;color:var(--ink-faint);font-size:0.78rem;font-family:var(--font-mono);margin-top:50px;}
+</style>
+</head>
+<body>
+
+<div class="hud">
+  <div class="hud-inner">
+    <div class="hud-logo"><span class="spark">✦</span> Python Data Quest</div>
+    <div class="hud-stats">
+      <div class="hud-stat">⭐ XP: <b id="xpCount">0</b></div>
+      <div class="hud-stat">🏁 <b id="stageCount">0/5</b> ด่าน
+        <div class="hud-bar"><div class="hud-bar-fill" id="hudBarFill"></div></div>
+      </div>
+      <div class="hud-rank" id="hudRank">มือใหม่หัดปั้น</div>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <span class="hero-eyebrow">PYTHON · DATA STRUCTURE ADVENTURE</span>
+  <h1>ภารกิจพิชิต<br>โครงสร้างข้อมูล</h1>
+  <p>ออกเดินทางผ่าน 5 ดินแดนของ Python — String, List, Tuple, Set และ Dictionary
+     เรียนรู้หลักการ ดูภาพประกอบ อ่านโค้ดจริง แล้วพิสูจน์ตัวเองด้วยภารกิจย่อยเพื่อปลดล็อกดินแดนถัดไป</p>
+
+  <div class="howto">
+    <h3>🎮 วิธีเล่น</h3>
+    <ol>
+      <li>คลิกโหนดบนแผนที่ด้านล่างเพื่อเข้าสู่ด่านที่ปลดล็อกแล้ว</li>
+      <li>อ่าน "ตำราประจำด่าน" และดู "ภาพประกอบ" ให้เข้าใจหลักการ</li>
+      <li>ศึกษาตัวอย่างโค้ด แล้วตอบ "ภารกิจย่อย" ให้ถูกต้อง</li>
+      <li>ตอบถูกครบทุกข้อ → ได้ XP และปลดล็อกด่านถัดไปทันที</li>
+    </ol>
+  </div>
+</div>
+
+<div class="quest-map-section">
+  <div class="quest-map-title">แผนที่การเดินทาง</div>
+  <div class="quest-map" id="questMap">
+    <button class="node unlocked" data-target="string" style="--c:var(--c-string)">
+      <div class="node-circle">🔤<span class="node-status">1</span></div>
+      <div class="node-label">String<small>สายอักขระ</small></div>
+    </button>
+    <button class="node locked" data-target="list" style="--c:var(--c-list)">
+      <div class="node-circle">📋<span class="node-status">🔒</span></div>
+      <div class="node-label">List<small>รายการ</small></div>
+    </button>
+    <button class="node locked" data-target="tuple" style="--c:var(--c-tuple)">
+      <div class="node-circle">🔒<span class="node-status">🔒</span></div>
+      <div class="node-label">Tuple<small>ทูเพิล</small></div>
+    </button>
+    <button class="node locked" data-target="set" style="--c:var(--c-set)">
+      <div class="node-circle">🫧<span class="node-status">🔒</span></div>
+      <div class="node-label">Set<small>เซต</small></div>
+    </button>
+    <button class="node locked" data-target="dict" style="--c:var(--c-dict)">
+      <div class="node-circle">📖<span class="node-status">🔒</span></div>
+      <div class="node-label">Dictionary<small>พจนานุกรม</small></div>
+    </button>
+  </div>
+</div>
+
+<!-- ================= LEVEL 1: STRING ================= -->
+<section class="level" id="level-string" style="--c:var(--c-string)">
+  <div class="level-inner">
+    <div class="level-banner">
+      <span class="level-tag">ด่านที่ 1 · ดินแดนแห่งตัวอักษร</span>
+      <h2>String <span class="th">สายอักขระ</span></h2>
+      <p class="flavor">ทุกถ้อยคำในโปรแกรมล้วนเริ่มจากที่นี่ — ลำดับของตัวอักษรที่เรียงต่อกันอย่างมีวินัย และไม่ยอมให้ใครมาแก้ไขค่าเดิม</p>
+    </div>
+    <div class="level-body">
+      <div class="card concept-card">
+        <h3>📜 ตำราประจำด่าน</h3>
+        <ul>
+          <li><b>เรียงลำดับ (Ordered):</b> ตัวอักษรแต่ละตัวมีตำแหน่ง <code>index</code> ที่แน่นอน เริ่มนับจาก 0</li>
+          <li><b>แก้ไขค่าไม่ได้ (Immutable):</b> เมื่อสร้าง string แล้ว จะไปเปลี่ยนตัวอักษรตัวใดตัวหนึ่งโดยตรงไม่ได้</li>
+          <li><b>ดัชนีติดลบ (Negative index):</b> ใช้ <code>-1</code> เพื่อนับจากท้ายสุดย้อนกลับมา</li>
+          <li><b>Slicing:</b> ใช้ <code>s[start:end]</code> เพื่อตัดข้อความช่วงหนึ่งออกมา (ไม่รวมตำแหน่ง end)</li>
+          <li>สร้างด้วยเครื่องหมายคำพูด <code>"..."</code> หรือ <code>'...'</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔍 ภาพประกอบ</h3>
+        <div class="diagram">
+          <div class="box-row">
+            <div class="idx-cell">0</div><div class="idx-cell">1</div><div class="idx-cell">2</div>
+            <div class="idx-cell">3</div><div class="idx-cell">4</div><div class="idx-cell">5</div>
+          </div>
+          <div class="box-row">
+            <div class="char-box">P</div><div class="char-box">Y</div><div class="char-box">T</div>
+            <div class="char-box">H</div><div class="char-box">O</div><div class="char-box">N</div>
+          </div>
+          <div class="box-row">
+            <div class="idx-cell">-6</div><div class="idx-cell">-5</div><div class="idx-cell">-4</div>
+            <div class="idx-cell">-3</div><div class="idx-cell">-2</div><div class="idx-cell">-1</div>
+          </div>
+          <div class="diagram-caption">s = "PYTHON" — s[0] คือ "P", s[-1] คือ "N"</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💻 ตัวอย่างโค้ด</h3>
+        <pre class="code-block"><code><span class="kw">s</span> = <span class="str">"PYTHON"</span>
+<span class="fn">print</span>(s[0])          <span class="com"># ตัวแรก</span>
+<span class="out">→ P</span>
+<span class="fn">print</span>(s[-1])         <span class="com"># ตัวสุดท้าย</span>
+<span class="out">→ N</span>
+<span class="fn">print</span>(s[1:4])        <span class="com"># slice ตำแหน่ง 1 ถึงก่อน 4</span>
+<span class="out">→ YTH</span>
+
+s[0] = <span class="str">"X"</span>            <span class="com"># ❌ TypeError: 'str' object does not support item assignment</span></code></pre>
+      </div>
+
+      <div class="card quiz-card">
+        <h3>⚔️ ภารกิจย่อย</h3>
+        <div class="quiz" data-level="string">
+          <div class="question" data-qid="s1">
+            <p class="qtext">1) กำหนด <code style="font-family:var(--font-mono);color:var(--c)">s = "PYTHON"</code> คำสั่ง <code style="font-family:var(--font-mono);color:var(--c)">print(s[1:4])</code> จะได้ผลลัพธ์อะไร?</p>
+            <div class="options">
+              <button class="opt" data-correct="false">"PYTH"</button>
+              <button class="opt" data-correct="true">"YTH"</button>
+              <button class="opt" data-correct="false">"YTHO"</button>
+              <button class="opt" data-correct="false">"PYT"</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+          <div class="question" data-qid="s2">
+            <p class="qtext">2) String เป็นชนิดข้อมูลที่ <b>แก้ไขค่าไม่ได้ (immutable)</b> — ถูกหรือผิด?</p>
+            <div class="options">
+              <button class="opt" data-correct="true">ถูกต้อง — แก้ไขตัวอักษรโดยตรงไม่ได้</button>
+              <button class="opt" data-correct="false">ผิด — แก้ไขได้เหมือน list</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </div>
+        <button class="btn-next" data-next="list" disabled>ปลดล็อกด่านต่อไป →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEVEL 2: LIST ================= -->
+<section class="level" id="level-list" style="--c:var(--c-list)">
+  <div class="level-inner">
+    <div class="level-banner">
+      <span class="level-tag">ด่านที่ 2 · คลังสัมภาระที่แก้ไขได้</span>
+      <h2>List <span class="th">รายการ</span></h2>
+      <p class="flavor">กล่องเก็บของที่เรียงเป็นแถว เปิดให้คุณสลับ เพิ่ม หรือลบของข้างในได้ตลอดเวลา</p>
+    </div>
+    <div class="level-body">
+      <div class="card concept-card">
+        <h3>📜 ตำราประจำด่าน</h3>
+        <ul>
+          <li><b>เรียงลำดับ (Ordered):</b> มี index เหมือน string เข้าถึงด้วย <code>list[i]</code> ได้</li>
+          <li><b>แก้ไขค่าได้ (Mutable):</b> เปลี่ยนค่า เพิ่ม หรือลบสมาชิกภายหลังได้ด้วย <code>append()</code>, <code>remove()</code></li>
+          <li><b>มีค่าซ้ำได้:</b> ใส่สมาชิกที่มีค่าเหมือนกันหลายตัวได้</li>
+          <li>สร้างด้วยวงเล็บเหลี่ยม <code>[ ]</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔍 ภาพประกอบ</h3>
+        <div class="diagram">
+          <div class="list-diagram">
+            <div class="list-state">
+              <span class="tag">ก่อนแก้ไข</span>
+              <div class="box-row">
+                <div class="box-word">apple</div><div class="box-word">banana</div><div class="box-word">cherry</div>
+              </div>
+            </div>
+            <div class="list-arrow">fruits[1] = "mango"<br>➜</div>
+            <div class="list-state">
+              <span class="tag">หลังแก้ไข</span>
+              <div class="box-row">
+                <div class="box-word">apple</div><div class="box-word hl">mango</div><div class="box-word">cherry</div>
+              </div>
+            </div>
+          </div>
+          <div class="diagram-caption">index [1] ถูกเขียนทับได้โดยตรง — นี่คือความหมายของ mutable</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💻 ตัวอย่างโค้ด</h3>
+        <pre class="code-block"><code>fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]
+fruits[1] = <span class="str">"mango"</span>       <span class="com"># แก้ไขค่าตำแหน่ง 1</span>
+fruits.append(<span class="str">"kiwi"</span>)     <span class="com"># เพิ่มท้ายรายการ</span>
+<span class="fn">print</span>(fruits)
+<span class="out">→ ['apple', 'mango', 'cherry', 'kiwi']</span></code></pre>
+      </div>
+
+      <div class="card quiz-card">
+        <h3>⚔️ ภารกิจย่อย</h3>
+        <div class="quiz" data-level="list">
+          <div class="question" data-qid="l1">
+            <p class="qtext">1) จากโค้ด <code style="font-family:var(--font-mono);color:var(--c)">fruits[1] = "mango"</code> ผลลัพธ์ของ <code style="font-family:var(--font-mono);color:var(--c)">print(fruits)</code> คือ?</p>
+            <div class="options">
+              <button class="opt" data-correct="false">['apple', 'banana', 'cherry']</button>
+              <button class="opt" data-correct="true">['apple', 'mango', 'cherry']</button>
+              <button class="opt" data-correct="false">['mango', 'banana', 'cherry']</button>
+              <button class="opt" data-correct="false">Error</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+          <div class="question" data-qid="l2">
+            <p class="qtext">2) List เป็นทั้งชนิดข้อมูลที่ <b>เรียงลำดับ</b> และ <b>แก้ไขค่าได้</b> — ถูกหรือผิด?</p>
+            <div class="options">
+              <button class="opt" data-correct="true">ถูกต้อง</button>
+              <button class="opt" data-correct="false">ผิด list ไม่มีลำดับ</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </div>
+        <button class="btn-next" data-next="tuple" disabled>ปลดล็อกด่านต่อไป →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEVEL 3: TUPLE ================= -->
+<section class="level" id="level-tuple" style="--c:var(--c-tuple)">
+  <div class="level-inner">
+    <div class="level-banner">
+      <span class="level-tag">ด่านที่ 3 · ห้องนิรภัยแห่งข้อมูล</span>
+      <h2>Tuple <span class="th">ทูเพิล</span></h2>
+      <p class="flavor">เหมือน list ทุกประการ แต่ถูกล็อกไว้ด้วยกุญแจ — เหมาะกับข้อมูลที่ไม่อยากให้ใครมาแตะต้อง</p>
+    </div>
+    <div class="level-body">
+      <div class="card concept-card">
+        <h3>📜 ตำราประจำด่าน</h3>
+        <ul>
+          <li><b>เรียงลำดับ (Ordered):</b> เข้าถึงด้วย index ได้เหมือน list</li>
+          <li><b>แก้ไขค่าไม่ได้ (Immutable):</b> เมื่อสร้างแล้ว ห้ามเปลี่ยน เพิ่ม หรือลบสมาชิก</li>
+          <li><b>มีค่าซ้ำได้</b> เหมือน list</li>
+          <li>สร้างด้วยวงเล็บกลม <code>( )</code></li>
+          <li>นิยมใช้เก็บข้อมูลที่ตายตัว เช่น พิกัด (x, y) หรือค่าคงที่</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔍 ภาพประกอบ</h3>
+        <div class="diagram">
+          <div class="tuple-boxes">
+            <div class="lock-box">10<span class="pin">🔒</span></div>
+            <div class="lock-box">20<span class="pin">🔒</span></div>
+          </div>
+          <div class="diagram-caption">point = (10, 20)</div>
+          <div class="error-tag">⚠️ point[0] = 99 → TypeError: 'tuple' object does not support item assignment</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💻 ตัวอย่างโค้ด</h3>
+        <pre class="code-block"><code>point = (<span class="num">10</span>, <span class="num">20</span>)
+<span class="fn">print</span>(point[0])
+<span class="out">→ 10</span>
+
+point[0] = <span class="num">99</span>       <span class="com"># ❌ TypeError: แก้ไขค่าไม่ได้</span></code></pre>
+      </div>
+
+      <div class="card quiz-card">
+        <h3>⚔️ ภารกิจย่อย</h3>
+        <div class="quiz" data-level="tuple">
+          <div class="question" data-qid="t1">
+            <p class="qtext">1) จากโค้ด <code style="font-family:var(--font-mono);color:var(--c)">point = (10, 20)</code> คำสั่ง <code style="font-family:var(--font-mono);color:var(--c)">point[0] = 99</code> จะเกิดอะไรขึ้น?</p>
+            <div class="options">
+              <button class="opt" data-correct="true">เกิด TypeError เพราะ tuple แก้ไขค่าไม่ได้</button>
+              <button class="opt" data-correct="false">ได้ point เป็น (99, 20)</button>
+              <button class="opt" data-correct="false">ไม่มีอะไรเกิดขึ้น</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+          <div class="question" data-qid="t2">
+            <p class="qtext">2) ควรเลือกใช้ tuple แทน list เมื่อใด?</p>
+            <div class="options">
+              <button class="opt" data-correct="true">เมื่อต้องการข้อมูลที่ไม่ควรถูกแก้ไขระหว่างโปรแกรมทำงาน</button>
+              <button class="opt" data-correct="false">เมื่อต้องการเพิ่มสมาชิกใหม่บ่อย ๆ</button>
+              <button class="opt" data-correct="false">เมื่อต้องการเก็บข้อมูลแบบ key-value</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </div>
+        <button class="btn-next" data-next="set" disabled>ปลดล็อกด่านต่อไป →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEVEL 4: SET ================= -->
+<section class="level" id="level-set" style="--c:var(--c-set)">
+  <div class="level-inner">
+    <div class="level-banner">
+      <span class="level-tag">ด่านที่ 4 · ทะเลฟองสบู่แห่งความไม่ซ้ำ</span>
+      <h2>Set <span class="th">เซต</span></h2>
+      <p class="flavor">ฟองสบู่ลอยอย่างอิสระไม่มีลำดับ และไม่มีวันมีฟองซ้ำกันสองใบ — ใครพยายามเติมของซ้ำจะถูกเด้งกลับ</p>
+    </div>
+    <div class="level-body">
+      <div class="card concept-card">
+        <h3>📜 ตำราประจำด่าน</h3>
+        <ul>
+          <li><b>ไม่มีลำดับ (Unordered):</b> ไม่มี index จะเรียก <code>colors[0]</code> ไม่ได้</li>
+          <li><b>แก้ไขได้ (Mutable):</b> เพิ่มด้วย <code>add()</code> หรือลบด้วย <code>remove()</code> ได้</li>
+          <li><b>ไม่มีค่าซ้ำ:</b> ถ้าเพิ่มค่าที่มีอยู่แล้ว จะไม่มีอะไรเกิดขึ้น</li>
+          <li>สร้างด้วยปีกกา <code>{ }</code> หรือ <code>set()</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔍 ภาพประกอบ</h3>
+        <div class="diagram">
+          <div class="bubbles">
+            <span class="bubble">red</span><span class="bubble">green</span><span class="bubble">blue</span>
+          </div>
+          <div class="dup-demo">
+            <div class="dup-row">
+              <span>colors.add("red")</span>
+              <span class="badge reject">❌ ซ้ำ — ไม่มีอะไรเปลี่ยน</span>
+            </div>
+            <div class="dup-row">
+              <span>colors.add("yellow")</span>
+              <span class="badge accept">✅ ใหม่ — เพิ่มเข้าไป</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💻 ตัวอย่างโค้ด</h3>
+        <pre class="code-block"><code>colors = {<span class="str">"red"</span>, <span class="str">"green"</span>, <span class="str">"blue"</span>}
+colors.add(<span class="str">"red"</span>)      <span class="com"># มีอยู่แล้ว ไม่เพิ่มซ้ำ</span>
+colors.add(<span class="str">"yellow"</span>)   <span class="com"># ใหม่ เพิ่มเข้าไป</span>
+<span class="fn">print</span>(colors)
+<span class="out">→ {'red', 'green', 'blue', 'yellow'}  # ลำดับไม่แน่นอน</span></code></pre>
+      </div>
+
+      <div class="card quiz-card">
+        <h3>⚔️ ภารกิจย่อย</h3>
+        <div class="quiz" data-level="set">
+          <div class="question" data-qid="se1">
+            <p class="qtext">1) จาก <code style="font-family:var(--font-mono);color:var(--c)">colors = {"red","green","blue"}</code> หลัง <code style="font-family:var(--font-mono);color:var(--c)">colors.add("red")</code> เซตจะมีสมาชิกกี่ตัว?</p>
+            <div class="options">
+              <button class="opt" data-correct="true">3 — เพราะ "red" มีอยู่แล้ว ซ้ำไม่ได้</button>
+              <button class="opt" data-correct="false">4</button>
+              <button class="opt" data-correct="false">2</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+          <div class="question" data-qid="se2">
+            <p class="qtext">2) เราสามารถเข้าถึงสมาชิกด้วย <code style="font-family:var(--font-mono);color:var(--c)">colors[0]</code> ได้หรือไม่?</p>
+            <div class="options">
+              <button class="opt" data-correct="true">ไม่ได้ เพราะ set ไม่มีลำดับ/ดัชนี</button>
+              <button class="opt" data-correct="false">ได้ เหมือน list ทุกประการ</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </div>
+        <button class="btn-next" data-next="dict" disabled>ปลดล็อกด่านต่อไป →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEVEL 5: DICTIONARY ================= -->
+<section class="level" id="level-dict" style="--c:var(--c-dict)">
+  <div class="level-inner">
+    <div class="level-banner">
+      <span class="level-tag">ด่านสุดท้าย · หอสมุดแห่งกุญแจ-คำตอบ</span>
+      <h2>Dictionary <span class="th">พจนานุกรม</span></h2>
+      <p class="flavor">ทุกคำตอบมีกุญแจของตัวเอง — เสิร์ชด้วย key แล้วรับ value กลับมาได้ทันที ไม่ต้องนับตำแหน่ง</p>
+    </div>
+    <div class="level-body">
+      <div class="card concept-card">
+        <h3>📜 ตำราประจำด่าน</h3>
+        <ul>
+          <li><b>เก็บแบบคู่ key-value:</b> แต่ละ key ต้องไม่ซ้ำกัน (แต่ value ซ้ำกันได้)</li>
+          <li><b>เรียงตามลำดับที่ใส่เข้าไป</b> (ตั้งแต่ Python 3.7 เป็นต้นมา)</li>
+          <li><b>แก้ไขได้ (Mutable):</b> เพิ่ม/แก้ไขค่าได้ผ่าน key โดยตรง</li>
+          <li>เข้าถึงค่าไม่ใช้ index แต่ใช้ <code>d[key]</code></li>
+          <li>สร้างด้วยปีกกา <code>{ key: value }</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔍 ภาพประกอบ</h3>
+        <div class="diagram">
+          <div class="kv-list">
+            <div class="kv"><span class="key">"name"</span><span class="ar">➜</span><span class="val">"Tonka"</span></div>
+            <div class="kv new"><span class="key">"age"</span><span class="ar">➜</span><span class="val">22</span></div>
+            <div class="kv new"><span class="key">"grade"</span><span class="ar">➜</span><span class="val">"A"</span></div>
+          </div>
+          <div class="diagram-caption">student["age"] ถูกแก้จาก 21 → 22 และเพิ่มคีย์ "grade" ใหม่</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💻 ตัวอย่างโค้ด</h3>
+        <pre class="code-block"><code>student = {<span class="str">"name"</span>: <span class="str">"Tonka"</span>, <span class="str">"age"</span>: <span class="num">21</span>}
+student[<span class="str">"age"</span>] = <span class="num">22</span>        <span class="com"># แก้ไขค่าเดิม</span>
+student[<span class="str">"grade"</span>] = <span class="str">"A"</span>     <span class="com"># เพิ่ม key ใหม่</span>
+<span class="fn">print</span>(student[<span class="str">"age"</span>])
+<span class="out">→ 22</span></code></pre>
+      </div>
+
+      <div class="card quiz-card">
+        <h3>⚔️ ภารกิจย่อย</h3>
+        <div class="quiz" data-level="dict">
+          <div class="question" data-qid="d1">
+            <p class="qtext">1) หลัง <code style="font-family:var(--font-mono);color:var(--c)">student["age"] = 22</code> คำสั่ง <code style="font-family:var(--font-mono);color:var(--c)">print(student["age"])</code> จะได้อะไร?</p>
+            <div class="options">
+              <button class="opt" data-correct="false">21</button>
+              <button class="opt" data-correct="true">22</button>
+              <button class="opt" data-correct="false">Error</button>
+              <button class="opt" data-correct="false">None</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+          <div class="question" data-qid="d2">
+            <p class="qtext">2) Dictionary เก็บข้อมูลในลักษณะใด?</p>
+            <div class="options">
+              <button class="opt" data-correct="true">คู่ key-value โดยแต่ละ key ต้องไม่ซ้ำกัน</button>
+              <button class="opt" data-correct="false">ค่าล้วน ๆ เรียงตามดัชนีเหมือน list</button>
+              <button class="opt" data-correct="false">ชุดของค่าที่ไม่ซ้ำเหมือน set</button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </div>
+        <button class="btn-next" data-next="finale" disabled>ดูสรุปภารกิจ →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINALE ================= -->
+<section class="finale" id="finale">
+  <div class="finale-inner">
+    <div style="font-size:2.4rem;">🏆</div>
+    <h2>พิชิตครบทั้ง 5 ดินแดน!</h2>
+    <p>ยินดีด้วย นักผจญภัย — ตอนนี้คุณเข้าใจโครงสร้างข้อมูลพื้นฐานของ Python ครบทุกชนิดแล้ว มาดูสรุปคุณสมบัติของแต่ละดินแดนอีกครั้ง</p>
+    <div class="compare-wrap">
+      <table class="compare">
+        <thead>
+          <tr><th>โครงสร้างข้อมูล</th><th>เรียงลำดับ</th><th>แก้ไขได้</th><th>ค่าซ้ำ</th><th>เข้าถึงด้วย</th><th>สัญลักษณ์</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>String</td><td>✅</td><td>❌</td><td>✅</td><td>index</td><td><code style="font-family:var(--font-mono)">" "</code></td></tr>
+          <tr><td>List</td><td>✅</td><td>✅</td><td>✅</td><td>index</td><td><code style="font-family:var(--font-mono)">[ ]</code></td></tr>
+          <tr><td>Tuple</td><td>✅</td><td>❌</td><td>✅</td><td>index</td><td><code style="font-family:var(--font-mono)">( )</code></td></tr>
+          <tr><td>Set</td><td>❌</td><td>✅</td><td>❌</td><td>ค่า (in)</td><td><code style="font-family:var(--font-mono)">{ }</code></td></tr>
+          <tr><td>Dictionary</td><td>✅</td><td>✅</td><td>key ห้ามซ้ำ</td><td>key</td><td><code style="font-family:var(--font-mono)">{k: v}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Python Data Quest — เรียนโครงสร้างข้อมูลผ่านการเล่น</footer>
+
+<script>
+const LEVELS = ['string','list','tuple','set','dict'];
+const state = {
+  xp: 0,
+  completed: {},
+  unlocked: {string:true, list:false, tuple:false, set:false, dict:false}
+};
+
+const xpCountEl = document.getElementById('xpCount');
+const stageCountEl = document.getElementById('stageCount');
+const hudBarFill = document.getElementById('hudBarFill');
+const hudRank = document.getElementById('hudRank');
+const questMap = document.getElementById('questMap');
+
+function rankFor(n){
+  if(n===0) return 'มือใหม่หัดปั้น';
+  if(n<=2) return 'นักเรียนฝึกหัด';
+  if(n<=4) return 'นักผจญภัยข้อมูล';
+  return 'เจ้าแห่งโครงสร้างข้อมูล';
+}
+
+function updateHUD(){
+  const doneCount = Object.values(state.completed).filter(Boolean).length;
+  xpCountEl.textContent = state.xp;
+  stageCountEl.textContent = doneCount + '/5';
+  hudBarFill.style.width = (doneCount/5*100) + '%';
+  hudRank.textContent = rankFor(doneCount);
+}
+
+function setNodeState(name, cls){
+  const node = questMap.querySelector('.node[data-target="'+name+'"]');
+  node.classList.remove('locked','unlocked','completed');
+  node.classList.add(cls);
+  const status = node.querySelector('.node-status');
+  const idx = LEVELS.indexOf(name)+1;
+  if(cls==='locked') status.textContent = '🔒';
+  else if(cls==='completed') status.textContent = '✓';
+  else status.textContent = idx;
+}
+
+// node click -> scroll if unlocked
+questMap.querySelectorAll('.node').forEach(node=>{
+  node.addEventListener('click', ()=>{
+    const target = node.dataset.target;
+    if(node.classList.contains('locked')){
+      node.classList.remove('shake'); void node.offsetWidth; node.classList.add('shake');
+      return;
+    }
+    document.getElementById('level-'+target).scrollIntoView({behavior:'smooth', block:'start'});
+  });
+});
+
+// quiz logic
+document.querySelectorAll('.quiz').forEach(quiz=>{
+  const levelName = quiz.dataset.level;
+  const questions = quiz.querySelectorAll('.question');
+  const passed = {};
+
+  questions.forEach(q=>{
+    const qid = q.dataset.qid;
+    passed[qid] = false;
+    const opts = q.querySelectorAll('.opt');
+    const feedback = q.querySelector('.feedback');
+
+    opts.forEach(opt=>{
+      opt.addEventListener('click', ()=>{
+        if(passed[qid]) return;
+        const correct = opt.dataset.correct === 'true';
+        if(correct){
+          opt.classList.add('correct');
+          opts.forEach(o=>o.disabled=true);
+          feedback.textContent = '✅ ถูกต้อง!';
+          feedback.className = 'feedback ok';
+          if(!passed[qid]){
+            state.xp += 10;
+            const pop = document.createElement('span');
+            pop.className='xp-pop'; pop.textContent='+10 XP';
+            feedback.appendChild(pop);
+          }
+          passed[qid] = true;
+          updateHUD();
+          checkLevelComplete();
+        } else {
+          opt.classList.add('wrong');
+          feedback.textContent = '❌ ยังไม่ถูก ลองอีกครั้งนะ';
+          feedback.className = 'feedback bad';
+          setTimeout(()=>opt.classList.remove('wrong'), 500);
+        }
+      });
+    });
+  });
+
+  function checkLevelComplete(){
+    const allDone = Object.values(passed).every(Boolean);
+    const btn = quiz.closest('.card').nextElementSibling ? null : null;
+    const nextBtn = quiz.parentElement.querySelector('.btn-next');
+    if(allDone){
+      nextBtn.disabled = false;
+      nextBtn.classList.add('ready');
+      nextBtn.textContent = nextBtn.dataset.next === 'finale' ? '🎉 ดูสรุปภารกิจ →' : '🔓 ปลดล็อกด่านต่อไป →';
+      if(!state.completed[levelName]){
+        state.completed[levelName] = true;
+        setNodeState(levelName, 'completed');
+        updateHUD();
+      }
+    }
+  }
+});
+
+// next-level buttons
+document.querySelectorAll('.btn-next').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(btn.disabled) return;
+    const next = btn.dataset.next;
+    if(next === 'finale'){
+      const finale = document.getElementById('finale');
+      finale.classList.add('show');
+      finale.scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    }
+    if(!state.unlocked[next]){
+      state.unlocked[next] = true;
+      setNodeState(next, 'unlocked');
+    }
+    document.getElementById('level-'+next).scrollIntoView({behavior:'smooth', block:'start'});
+  });
+});
+
+updateHUD();
+</script>
+
+</body>
+</html>
